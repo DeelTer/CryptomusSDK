@@ -42,6 +42,8 @@ public class CryptoPayment {
 	@SerializedName("payer_amount")
 	private BigDecimal payerAmount;
 	private String currency;
+	@SerializedName("payer_currency")
+	private String payerCurrency;
 	@SerializedName("payment_status")
 	private PaymentStatus paymentStatus;
 	private PaymentStatus status;
@@ -56,14 +58,16 @@ public class CryptoPayment {
 
 	@Override
 	public String toString() {
-		return "Payment{" +
+		return "CryptoPayment{" +
 				"id=" + id +
 				", orderId=" + orderId +
 				", amount=" + amount +
 				", paymentAmount=" + paymentAmount +
 				", payerAmount=" + payerAmount +
 				", currency='" + currency + '\'' +
+				", payerCurrency='" + payerCurrency + '\'' +
 				", paymentStatus=" + paymentStatus +
+				", status=" + status +
 				", confirmationUrl='" + confirmationUrl + '\'' +
 				", expiredAt=" + expiredAt +
 				", confirmed=" + confirmed +

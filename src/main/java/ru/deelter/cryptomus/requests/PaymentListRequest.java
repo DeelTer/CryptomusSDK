@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.deelter.cryptomus.data.CryptomusRequest;
-import ru.deelter.cryptomus.utils.CryptomusUrls;
+import ru.deelter.cryptomus.utils.CryptoRequestUtil;
 import ru.deelter.cryptomus.utils.EncodeUtil;
 
 import java.nio.charset.StandardCharsets;
@@ -17,7 +17,7 @@ public class PaymentListRequest extends CryptomusRequest {
 
 
 	public PaymentListRequest(@Nullable UUID cursor) {
-		super(CryptomusUrls.PAYMENT_LIST, null);
+		super(CryptoRequestUtil.PAYMENT_LIST, null);
 		this.cursor = cursor;
 	}
 

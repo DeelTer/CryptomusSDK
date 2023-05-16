@@ -2,31 +2,28 @@ package ru.deelter.cryptomus;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.deelter.cryptomus.data.CryptoPayment;
 import ru.deelter.cryptomus.data.CryptomusRequest;
-import ru.deelter.cryptomus.data.Pagination;
 import ru.deelter.cryptomus.data.PaymentList;
 import ru.deelter.cryptomus.data.requests.PaymentCreateData;
 import ru.deelter.cryptomus.exceptions.BadRequestException;
 import ru.deelter.cryptomus.requests.PaymentCreateRequest;
 import ru.deelter.cryptomus.requests.PaymentInfoRequest;
 import ru.deelter.cryptomus.requests.PaymentListRequest;
+import ru.deelter.cryptomus.utils.CryptoRequestUtil;
 import ru.deelter.cryptomus.utils.EncodeUtil;
 import ru.deelter.cryptomus.utils.JsonUtil;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.Scanner;
 import java.util.UUID;
 
 public class Cryptomus {
@@ -64,33 +61,23 @@ public class Cryptomus {
 		return parseResponse(PaymentList.class, new PaymentListRequest(cursor));
 	}
 
-	private <T> @Nullable T parseResponse(@Nullable Class<T> clazz, @NotNull CryptomusRequest request) throws IOException {
-		String json = request.getDataAsJson();
+	private <T> @Nullable T parseResponse(@Nullable Class<T> clazz, @NotNull CryptomusRequest cryptomusRequest) throws IOException {
+		String json = cryptomusRequest.getDataAsJson();
+		Request request = new Request.Builder()
+				.url(cryptomusRequest.getUrl())
+				.post(RequestBody.create(json, CryptoRequestUtil.MEDIA_TYPE_JSON))
+				.header("merchant", merchantId.toString())
+				.header("sign", createSign(json))
+				.build();
 
-		HttpURLConnection connection = (HttpURLConnection) new URL(request.getUrl()).openConnection();
-		connection.setRequestMethod("POST");
+		try (Response response = CryptoRequestUtil.CLIENT.newCall(request).execute(); ResponseBody responseBody = response.body()) {
+			if (!response.isSuccessful() || responseBody == null)
+				throw new BadRequestException(response.message());
 
-		connection.setRequestProperty("merchant", merchantId.toString());
-		connection.setRequestProperty("sign", createSign(json));
-		connection.setRequestProperty("Content-Type", "application/json");
-		connection.setDoOutput(true);
-
-		OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-		writer.write(json);
-		writer.flush();
-		writer.close();
-		connection.getOutputStream().close();
-
-		boolean success = connection.getResponseCode() / 100 == 2;
-		try (InputStream responseStream = success ? connection.getInputStream() : connection.getErrorStream()) {
-			Scanner scanner = new Scanner(responseStream).useDelimiter("\\A");
-			String response = scanner.hasNext() ? scanner.next() : "";
-			if (!success)
-				throw new BadRequestException(response);
 			if (clazz == null)
 				return null;
 
-			JsonObject object = JsonParser.parseString(response).getAsJsonObject();
+			JsonObject object = JsonParser.parseString(responseBody.string()).getAsJsonObject();
 			return JsonUtil.fromJson(object.get("result").toString(), clazz);
 		}
 	}

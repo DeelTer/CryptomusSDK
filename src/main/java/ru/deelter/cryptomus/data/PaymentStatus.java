@@ -34,4 +34,11 @@ public enum PaymentStatus {
 	public boolean isPaid() {
 		return this == PAID || this == PAID_OVER;
 	}
+
+	public boolean isError() {
+		return switch (this) {
+			case WRONG_AMOUNT, FAIL, SYSTEM_FAIL, CANCEL -> true;
+			default -> false;
+		};
+	}
 }
