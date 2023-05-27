@@ -1,8 +1,6 @@
 package ru.deelter.cryptomus.utils;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
 
 public class JsonUtil {
@@ -13,12 +11,6 @@ public class JsonUtil {
 		return GSON.toJson(object);
 	}
 
-	/**
-	 * JSON back to java Object
-	 *
-	 * @param json  - JSON
-	 * @param clazz - object class
-	 */
 	public static <T> T fromJson(@NotNull String json, @NotNull Class<T> clazz) {
 		return GSON.fromJson(json, clazz);
 	}
